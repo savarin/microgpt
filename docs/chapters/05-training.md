@@ -69,7 +69,7 @@ This is the *cross-entropy loss*, also called *negative log-likelihood*. It take
 Why negative log probability? Consider the behavior:
 - If the model assigns probability 1.0 to the correct token: loss = -log(1.0) = 0. Perfect prediction, zero loss.
 - If the model assigns probability 0.5: loss = -log(0.5) ≈ 0.693. Uncertain, moderate loss.
-- If the model assigns probability 0.01: loss = -log(0.01) ≈ 4.605. Confident but wrong, high loss.
+- If the model assigns probability 0.01: loss = -log(0.01) ≈ 4.605. Nearly missed the correct answer, high loss.
 - If the model assigns probability approaching 0: loss approaches infinity.
 
 This loss function has several desirable properties. It is zero only when the prediction is perfect. It increases without bound as the prediction worsens. And its gradient through softmax has a clean form: the gradient of the loss with respect to the logit of token `i` is `(predicted_probability_i - 1)` if `i` is the correct token, and `predicted_probability_i` otherwise. This means incorrect tokens that received high probability get pushed down, and the correct token gets pushed up, with strength proportional to the error.

@@ -101,7 +101,7 @@ def relu(self):
 
 **`exp`**: The exponential function. Its derivative is itself — `exp(x)`. This is one of the remarkable properties of `e^x` and is why the exponential appears throughout neural networks. It shows up in softmax, which converts raw scores into probabilities by exponentiating each score and normalizing.
 
-**`relu`**: The Rectified Linear Unit. `relu(x) = max(0, x)`. Its derivative is 1 for positive inputs and 0 for negative inputs — a step function. This is the activation function in the model's MLP layers. It introduces nonlinearity: without it, stacking linear layers would just produce another linear layer, and the model couldn't learn complex patterns. ReLU is the simplest activation function that works — it either passes the signal through unchanged or kills it entirely.
+**`relu`**: The Rectified Linear Unit. `relu(x) = max(0, x)`. Its derivative is 1 for positive inputs and 0 for negative inputs — a step function. This is the activation function used inside the model's feed-forward layers (Chapter 4). It introduces nonlinearity: without it, stacking linear transformations would just produce another linear transformation, and the model couldn't learn complex patterns. ReLU is the simplest activation function that works — it either passes the signal through unchanged or kills it entirely.
 
 Each function appears in the model for a specific reason: `log` in the loss, `exp` in softmax, `relu` in the MLP. There are no extra functions — microgpt implements exactly the mathematical operations it needs and nothing more.
 

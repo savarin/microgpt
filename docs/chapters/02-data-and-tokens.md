@@ -78,7 +78,7 @@ Position 2:  input = 3  (d),    target = 0  (a)    → "After 'd', predict 'a'"
 Position 3:  input = 0  (a),    target = 27 (BOS)  → "After 'a', predict end"
 ```
 
-Each position teaches the model one prediction: given this token at this position, what should come next? The model sees every pair simultaneously in one forward pass through the sequence, building up information about which characters tend to follow which.
+Each position teaches the model one prediction: given this token at this position, what should come next? The model processes these positions sequentially — each token is fed through the model one at a time, building up context about the characters seen so far. (Chapter 5 covers the details of this sequential processing.)
 
 The `vocab_size` — 28 in this example — determines the shape of several key components in the model. The token embedding table has one row per token ID (28 rows). The output layer produces one score per token ID (28 logits). When the model makes a prediction, it produces 28 numbers — one for each possible next token — and the loss measures how much probability it assigned to the correct one.
 

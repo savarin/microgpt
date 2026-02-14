@@ -38,7 +38,7 @@ step  999 / 1000 | loss 1.8551
 step 1000 / 1000 | loss 2.2895
 ```
 
-The loss starts around 3.3, which is roughly what you'd expect from random guessing across 27 possible characters (ln(27) ≈ 3.30). By the end, it has dropped to around 2.0. The model has learned something about the structure of names — which characters tend to follow which — without being told any rules.
+The loss starts around 3.3, which is roughly what you'd expect from random guessing across 27 possible characters (ln(27) ≈ 3.30). By the end, it has dropped to around 2.0. Individual steps vary — each step processes a different name, so the loss bounces around — but the trend is clearly downward. The model has learned something about the structure of names — which characters tend to follow which — without being told any rules.
 
 **Third**, the trained model generates 20 new names that never appeared in the dataset:
 

@@ -25,7 +25,7 @@ matrix = lambda nout, nin, std=0.08: [
 ]
 ```
 
-Each weight matrix is a list of lists of `Value` objects, initialized from a Gaussian distribution with mean 0 and standard deviation 0.08. The small standard deviation keeps initial weights close to zero, which gives the model a gentle starting point — predictions start close to uniform rather than wildly confident in random directions.
+Each weight matrix is a list of lists of `Value` objects, initialized from a Gaussian distribution with mean 0 and standard deviation 0.08. The small standard deviation keeps initial weights close to zero, which gives the model a gentle starting point — predictions start close to uniform rather than wildly confident in random directions. The exact value (0.08 vs. 0.05 vs. 0.1) is not critical; what matters is that it's small enough to avoid large initial logits that would saturate the softmax, but not so small that the gradients vanish at the start of training.
 
 The `state_dict` collects all the weight matrices:
 

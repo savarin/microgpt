@@ -84,29 +84,23 @@ if token_id == BOS:
     break
 ```
 
-The same BOS token that starts generation also ends it. During training, the model learned that BOS follows the last character of a name — it's the token that appears after the final letter in every training example (`[BOS, a, d, a, BOS]`). When the model generates BOS as the next token, it's predicting "this name is over."
+As described in Chapter 2, BOS serves as both the start and stop token. During training, the model learned that BOS follows the last character of a name. When it generates BOS during inference, it's predicting "this name is over" — a learned behavior, not a hard-coded rule.
 
-This is a learned behavior, not a hard-coded rule. The model doesn't know that BOS is special; it has learned from data that after certain character sequences, the BOS token is the most likely next token. A name like "ada" ends because the model has seen many 3-4 character names in training and predicts BOS as the most probable continuation after the final character.
-
-Many language models use separate BOS (begin) and EOS (end-of-sequence) tokens. microgpt's design is more economical: one token serves both roles. The context makes the meaning unambiguous. BOS at position 0 means "start." BOS predicted by the model at any other position means "stop." The model learns this distinction automatically from the training data.
-
-Without the BOS stop signal, generation would continue until `block_size` (16 tokens), potentially producing gibberish after the natural end of a name. With it, the model generates names of natural, learned lengths.
+The important consequence for generation is that names have *variable, learned lengths*. The model doesn't generate a fixed number of characters; it generates until it predicts BOS, which depends on the character sequence so far. A name that starts with common short-name patterns ("ed", "al") might end after 2-3 characters, while one that starts with longer-name patterns ("chris", "alex") might continue for 5-7. Without this stop signal, generation would continue to `block_size` (16 tokens), producing gibberish after the name's natural end.
 
 ## 6.5 The KV Cache in Generation
 
-During inference, the KV cache grows with each generated token:
+The KV cache introduced in Chapter 4 takes on particular importance during generation. In training, the full sequence is known in advance and the cache is a convenience. In generation, the sequence is being constructed one token at a time, and the cache is what makes autoregressive processing efficient.
 
 ```python
 keys, values = [[] for _ in range(n_layer)], [[] for _ in range(n_layer)]
 ```
 
-At the start of generation, the cache is empty. After processing the first token (BOS), the cache contains one key vector and one value vector per layer. After the second token (the first character), it contains two of each. By the time the model is predicting the 8th character, the cache contains 8 key-value pairs, and the attention mechanism computes scores against all 8 previous positions.
+At the start of generation, the cache is empty. With each generated token, the cache grows by one key-value pair per layer. By the time the model is predicting the 8th character, the cache contains 8 key-value pairs, and the attention mechanism computes scores against all 8 previous positions — without reprocessing any of them through the Q, K, V projections.
 
-This is the same caching mechanism used during training (Chapter 5), but in inference the benefit is clearer. Without the cache, generating each new character would require reprocessing all previous characters through the attention projections (Q, K, V linear transformations) from scratch. With the cache, only the new token needs its key and value computed — the previous tokens' keys and values are simply reused.
+For microgpt's short sequences, the efficiency gain is modest. But this is the same pattern used in production LLM inference: when generating a 1,000-token response with a 96-layer model, the savings from caching are enormous.
 
-For microgpt's short sequences and small model, the efficiency gain is modest. But the pattern is the same one used in production LLM inference, where the KV cache is a critical optimization. When generating a 1,000-token response with a model that has 96 layers and 96 attention heads, the savings from not recomputing all previous tokens' keys and values at every step are enormous.
-
-The KV cache also illustrates a design principle: the `gpt()` function is written to process one token at a time and *mutate* the cache by appending. This is a departure from the "pure function" style of the model's other components (`linear`, `softmax`, `rmsnorm` are all stateless). The mutation is contained and intentional — it's the mechanism that allows sequential, autoregressive processing without redundant computation.
+The cache also reveals a design choice worth noting: `gpt()` *mutates* the cache by appending. This is a departure from the stateless style of the model's other components (`linear`, `softmax`, `rmsnorm` are all pure functions). The mutation is contained and intentional — it is the mechanism that allows autoregressive processing without redundant computation.
 
 ---
 

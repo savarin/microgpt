@@ -151,15 +151,15 @@ The docstring's claim: "this file is the complete algorithm; everything else is 
 
 Is this true? Let's classify each omission:
 
-| Omission | Algorithm or efficiency? |
-|----------|------------------------|
+| Omission | Category |
+|----------|----------|
 | Batching | Efficiency — same math, parallel execution |
 | Tensor libraries | Efficiency — same operations, faster execution |
 | GPU | Efficiency — same operations, parallel hardware |
 | Mixed precision | Efficiency — same operations, less memory |
-| LayerNorm → RMSNorm | Neither — a different (arguably better) normalization choice |
-| GeLU → ReLU | Neither — a different (slightly worse) activation choice |
-| Biases | Neither — omitted for simplicity, not strictly efficiency |
+| LayerNorm → RMSNorm | Design choice — a different (arguably better) normalization |
+| GeLU → ReLU | Design choice — a different (slightly worse) activation |
+| Biases | Design choice — omitted for simplicity |
 | Dropout | Regularization — changes training dynamics, not the core algorithm |
 | Multiple layers | Capacity — changes what the model can learn, not how it learns |
 | Warmup, clipping, weight decay | Training stability — refinements to the optimization process |
