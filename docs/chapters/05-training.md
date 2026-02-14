@@ -64,7 +64,7 @@ probs = softmax(logits)
 loss_t = -probs[target_id].log()
 ```
 
-This is the *cross-entropy loss*, also called *negative log-likelihood*. It takes the probability the model assigned to the correct answer and passes it through negative logarithm.
+This is the *cross-entropy loss*, also called *negative log-likelihood*. It takes the probability the model assigned to the correct answer and computes its negative logarithm.
 
 Why negative log probability? Consider the behavior:
 - If the model assigns probability 1.0 to the correct token: loss = -log(1.0) = 0. Perfect prediction, zero loss.

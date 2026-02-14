@@ -80,7 +80,7 @@ That's it. No NumPy, no PyTorch, no TensorFlow, no JAX. The comments even explai
 
 This constraint has a cost. Without NumPy, matrix multiplication is a nested Python loop over individual scalar operations. A single matrix-vector multiply that would take one line in NumPy (`w @ x`) becomes a list comprehension with an inner sum. Without PyTorch, the autograd engine — the system that tracks operations and computes gradients — is written by hand as a Python class. These are slower by orders of magnitude than their library equivalents.
 
-But the constraint also has a profound benefit: *nothing is hidden*. When you read `linear(x, w)`, you see every multiplication and addition that constitutes a matrix-vector product. When you read `Value.__add__`, you see exactly how the computation graph records an addition and its local gradient. When you read `loss.backward()`, you see the topological sort and chain rule that constitute backpropagation. There is no function call that disappears into a C library you can't inspect.
+But the constraint also has a profound benefit: *nothing is hidden*. When you read `linear(x, w)`, you see every multiplication and addition that constitutes a matrix-vector product. When you read `Value.__add__`, you see exactly how the computation graph records an addition and its local gradient. When you read `loss.backward()`, you see the topological sort and chain rule that make up backpropagation. There is no function call that disappears into a C library you can't inspect.
 
 This is the trade-off microgpt makes deliberately. It is too slow to be useful for real training — but it is the clearest possible expression of what training *is*.
 

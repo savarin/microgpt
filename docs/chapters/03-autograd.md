@@ -34,7 +34,7 @@ class Value:
 
 A `Value` has four fields:
 
-- **`data`**: The actual number — the scalar value of this node. During the forward pass, this is the result of the computation. For a parameter, this is the weight value that gets updated during training.
+- **`data`**: The actual number — the scalar value of this node. During the forward pass, this is the result of the computation. For a parameter, this is the current value that gets updated during training.
 
 - **`grad`**: The gradient of the final loss with respect to this node. This starts at 0 and gets filled in during the backward pass. After `loss.backward()`, every `Value` in the computation graph has a `grad` that answers: "how much does the loss change if this value increases by a tiny amount?"
 
@@ -46,7 +46,7 @@ The `__slots__` declaration is a Python optimization. Normally, every Python obj
 
 ## 3.3 Arithmetic Operations
 
-The magic of `Value` is that it participates in normal Python arithmetic while silently building the computation graph. This is achieved through operator overloading:
+The magic of `Value` is that it participates in normal Python arithmetic while silently building the computation graph. Operator overloading makes this possible:
 
 ```python
 def __add__(self, other):
@@ -101,7 +101,7 @@ def relu(self):
 
 **`exp`**: The exponential function. Its derivative is itself — `exp(x)`. This is one of the remarkable properties of `e^x` and is why the exponential appears throughout neural networks. It shows up in softmax, which converts raw scores into probabilities by exponentiating each score and normalizing.
 
-**`relu`**: The Rectified Linear Unit. `relu(x) = max(0, x)`. Its derivative is 1 for positive inputs and 0 for negative inputs — a step function. This is the activation function used inside the model's feed-forward layers (Chapter 4). It introduces nonlinearity: without it, stacking linear transformations would just produce another linear transformation, and the model couldn't learn complex patterns. ReLU is the simplest activation function that works — it either passes the signal through unchanged or kills it entirely.
+**`relu`**: The Rectified Linear Unit. `relu(x) = max(0, x)`. Its derivative is 1 for positive inputs and 0 for negative inputs — a step function. This is the activation function used inside the model's feed-forward layers — the multi-layer perceptron, or MLP (Chapter 4). It introduces nonlinearity: without it, stacking linear transformations would just produce another linear transformation, and the model couldn't learn complex patterns. ReLU is the simplest activation function that works — it either passes the signal through unchanged or kills it entirely.
 
 Each function appears in the model for a specific reason: `log` in the loss, `exp` in softmax, `relu` in the MLP. There are no extra functions — microgpt implements exactly the mathematical operations it needs and nothing more.
 
@@ -162,4 +162,4 @@ Each of these is defined purely in terms of `__add__`, `__mul__`, and `__pow__` 
 
 This is a common pattern in numerical computing: define a small set of primitive operations with correct gradients, then build everything else from those primitives. The gradient computation "just works" for complex expressions because every complex expression decomposes into chains of primitive operations, each of which records its local gradient, and the chain rule composes them automatically.
 
-The entire autograd engine is 43 lines of code. It handles arbitrary computation graphs of any depth, with any combination of the supported operations. The next chapter builds a GPT-style transformer on top of it — and every multiplication, every attention score, every normalization will flow through these 43 lines, silently recording the computation graph that makes training possible.
+The entire autograd engine is 43 lines of code. It handles arbitrary computation graphs of any depth, with any combination of the supported operations. The next chapter builds a GPT-style transformer on top of it — and every multiplication, every attention score, every normalization flows through these 43 lines, silently recording the computation graph that makes training possible.

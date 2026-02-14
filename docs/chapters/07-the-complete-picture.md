@@ -119,7 +119,7 @@ microgpt is a faithful miniature of the GPT architecture, but production systems
 
 ### Architecture
 
-**LayerNorm vs RMSNorm**: GPT-2 uses LayerNorm, which centers the mean to zero and normalizes the variance. microgpt uses RMSNorm, which only normalizes the magnitude. Research has shown RMSNorm performs comparably with less computation. Notably, newer models like LLaMA also use RMSNorm — microgpt's choice aligns with modern practice.
+**LayerNorm vs RMSNorm**: GPT-2 uses LayerNorm, which centers the mean to zero and normalizes the variance. microgpt uses RMSNorm, which only normalizes the magnitude. Research shows RMSNorm performs comparably with less computation. Notably, newer models like LLaMA also use RMSNorm — microgpt's choice aligns with modern practice.
 
 **GeLU vs ReLU**: GPT-2 uses GeLU (Gaussian Error Linear Unit), a smooth activation function that allows small negative values to pass through with diminished magnitude. microgpt uses ReLU, which hard-clips negatives to zero. GeLU produces slightly better training dynamics in practice, but the difference is more pronounced at scale. For microgpt's single layer and small embedding dimension, ReLU is adequate.
 

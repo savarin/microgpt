@@ -52,13 +52,13 @@ With `vocab_size = 28`, `n_embd = 16`, and `n_layer = 1`, the total parameter co
 - Attention Q, K, V, O projections: 4 × (16 × 16) = 1,024
 - MLP layers: (64 × 16) + (16 × 64) = 2,048
 
-Total: 4,224 parameters. Each one is a `Value` object that will track its gradient during training.
+Total: 4,224 parameters. Each one is a `Value` object that tracks its gradient during training.
 
 ```python
 params = [p for mat in state_dict.values() for row in mat for p in row]
 ```
 
-This line flattens all the weight matrices into a single list. The optimizer will iterate over this list to update every parameter after each backward pass.
+This line flattens all the weight matrices into a single list. The optimizer iterates over this list to update every parameter after each backward pass.
 
 ## 4.2 Linear Transformation
 
@@ -75,7 +75,7 @@ If `x` has 16 elements and `w` has 64 rows of 16 elements each, the output has 6
 
 In NumPy, this would be `w @ x` — one line, executed in optimized C. Here, it is a Python list comprehension with an inner generator expression. The output is identical; the performance differs by orders of magnitude. But the computation is visible: every multiplication between a weight and an input, every summation, is a `Value` operation that records itself in the computation graph.
 
-Linear transformations appear everywhere in the model: projecting inputs to queries, keys, and values for attention; the two layers of the MLP; and the final output head that produces logits. The `linear` function is called 7 times per transformer layer, plus once for the output head — 8 times total for each token processed.
+Linear transformations appear everywhere in the model: projecting inputs to queries, keys, and values for attention; the two layers of the MLP; and the final output head that produces logits. The `linear` function is called 6 times per transformer layer (Q, K, V, O projections plus two MLP layers), plus once for the output head — 7 times total for each token processed.
 
 What does a linear transformation *do*, conceptually? It applies a learned rotation and scaling to the input vector. The weight matrix defines a new coordinate system, and the output is the input vector expressed in that system. By learning the right coordinate system, the model learns to extract useful features from its input — "this looks like the beginning of a name" or "a vowel tends to follow here."
 
@@ -116,9 +116,9 @@ The computation: `ms` is the mean of squared elements (the mean square). `scale`
 
 Why is normalization necessary? Without it, the magnitude of activations can grow or shrink as data passes through successive layers of the network. Growing activations cause numerical overflow and exploding gradients. Shrinking activations cause the signal to vanish. Normalization after each major operation keeps everything in a stable range.
 
-microgpt uses RMSNorm rather than the LayerNorm used in the original GPT-2. LayerNorm does two things: it normalizes the magnitude (like RMSNorm) and it centers the mean to zero. RMSNorm skips the mean-centering step. Research has shown that the mean centering contributes relatively little to training stability, while the magnitude normalization is what actually matters. RMSNorm is simpler (fewer operations, simpler gradient) and works just as well in practice — a trade-off in favor of clarity that doesn't sacrifice effectiveness.
+microgpt uses RMSNorm rather than the LayerNorm used in the original GPT-2. LayerNorm does two things: it normalizes the magnitude (like RMSNorm) and it centers the mean to zero. RMSNorm skips the mean-centering step. Research shows that mean centering contributes relatively little to training stability, while the magnitude normalization is what actually matters. RMSNorm is simpler (fewer operations, simpler gradient) and works just as well in practice — a trade-off in favor of clarity that doesn't sacrifice effectiveness.
 
-RMSNorm appears three times in the `gpt()` function: once after combining token and position embeddings (line 112), once before the attention block (line 117), and once before the MLP block (line 137). Each application stabilizes the activations before the next major computation.
+RMSNorm appears three times in the `gpt()` function: once after combining token and position embeddings, once before the attention block, and once before the MLP block. Each application stabilizes the activations before the next major computation.
 
 ## 4.5 Embeddings
 
@@ -160,7 +160,7 @@ values[li].append(v)
 
 **Queries, keys, and values** are three different linear projections of the same input. The analogy to information retrieval is useful: the *query* is "what am I looking for?", the *key* is "what do I contain?", and the *value* is "what information do I provide if you attend to me?" The query of the current token is compared against the keys of all previous tokens to determine relevance, and then the values of those tokens are aggregated weighted by relevance.
 
-The keys and values are appended to growing lists (`keys[li]` and `values[li]`). This is the **KV cache**: when processing a sequence position by position, the keys and values from previous positions are stored so they don't need to be recomputed. Each new position computes its own query, key, and value, but it compares its query against all accumulated keys.
+The keys and values are appended to growing lists (`keys[li]` and `values[li]`). This is the **key-value (KV) cache**: when processing a sequence position by position, the keys and values from previous positions are stored so they don't need to be recomputed. Each new position computes its own query, key, and value, but it compares its query against all accumulated keys.
 
 The attention computation is split across multiple heads:
 
@@ -229,7 +229,7 @@ The MLP has a characteristic "expand-and-contract" shape. The first linear layer
 
 **Why the expansion?** The 4× expansion creates a wider hidden layer where the model can compute more complex transformations. Think of it as a workspace: the model temporarily expands into a higher-dimensional space where it has more room to manipulate the representation, then compresses back to the original dimension. The expansion factor of 4 is a convention from the original transformer paper that has persisted because it works well.
 
-**Why ReLU?** Attention is a weighted average — a linear operation. The MLP is a sequence of linear operations with ReLU in between. Without the nonlinearity, two successive linear layers would collapse into a single linear layer (matrix multiplication is associative). ReLU introduces the ability to "turn off" certain dimensions (by clamping negatives to zero), which gives the network the capacity to learn nonlinear functions. The original GPT-2 uses GeLU (Gaussian Error Linear Unit), which is a smooth approximation of ReLU. microgpt uses ReLU because its derivative is simpler (a step function vs. a formula involving the Gaussian CDF), and at this scale the difference is negligible.
+**Why ReLU?** Attention is a weighted average — a linear operation. The MLP is a sequence of linear operations with ReLU in between. Without the nonlinearity, two successive linear layers would collapse into a single linear layer (matrix multiplication is associative). ReLU introduces the ability to "turn off" certain dimensions (by clamping negatives to zero), which gives the network the capacity to learn nonlinear functions. The original GPT-2 uses GeLU (Gaussian Error Linear Unit), which is a smooth approximation of ReLU. microgpt uses ReLU because its derivative is simpler (a step function vs. a formula involving the Gaussian cumulative distribution function), and at this scale the difference is negligible.
 
 **What does the MLP do, conceptually?** If attention's job is to move information between tokens ("what did I learn from the previous characters?"), the MLP's job is to transform information within a token ("given what I now know, what features should I compute?"). Attention is communication; MLP is computation.
 
@@ -256,4 +256,4 @@ return logits
 
 The language model head projects the 16-dimensional representation back to `vocab_size` dimensions — one score (logit) per token in the vocabulary. These logits are the model's raw predictions: higher logits mean the model considers that token more likely as the next token. The softmax function (applied outside `gpt()`, in the training loop or inference code) converts these logits into probabilities.
 
-This completes the forward pass. An integer token ID entered the function, was transformed into a 16-dimensional embedding, passed through attention and an MLP with residual connections, and emerged as a vector of 28 logits — one for each possible next token. Every operation along the way was performed on `Value` objects, so the entire computation is recorded in a graph that `backward()` can traverse to compute gradients.
+This completes the forward pass. An integer token ID entered the function, became a 16-dimensional embedding, passed through attention and an MLP with residual connections, and emerged as a vector of 28 logits — one for each possible next token. Every operation along the way was performed on `Value` objects, so the entire computation is recorded in a graph that `backward()` can traverse to compute gradients.

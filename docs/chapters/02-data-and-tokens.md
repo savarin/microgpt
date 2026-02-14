@@ -63,13 +63,13 @@ Using one token for both start and stop is an elegant design choice. Many implem
 
 ## 2.4 From Documents to Token Sequences
 
-Let's trace the complete tokenization of a name. Take the name "ada":
+To see the full tokenization pipeline, take the name "ada":
 
 1. The raw string is `"ada"`.
 2. Character-to-integer encoding: `a` → 0, `d` → 3, `a` → 0 (assuming standard alphabetical ordering).
 3. BOS wrapping: `[BOS, 0, 3, 0, BOS]` → using BOS = 27: `[27, 0, 3, 0, 27]`.
 
-This integer sequence is what the model will process. During training, the model sees it as a series of input-target pairs:
+This integer sequence is what the model processes. During training, the model sees it as a series of input-target pairs:
 
 ```
 Position 0:  input = 27 (BOS),  target = 0  (a)    → "After BOS, predict 'a'"

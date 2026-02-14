@@ -43,13 +43,13 @@ probs = softmax([l / temperature for l in logits])
 
 Temperature controls the "sharpness" of the probability distribution. To understand why, consider what softmax does to a vector of logits `[2.0, 1.0, 0.5]`:
 
-- **Temperature 1.0** (no scaling): softmax produces approximately `[0.51, 0.24, 0.11, ...]`. The highest logit gets about twice the probability of the second highest. This is the raw learned distribution.
+- **Temperature 1.0** (no scaling): softmax produces approximately `[0.63, 0.23, 0.14]`. The highest logit gets about three times the probability of the lowest. This is the raw learned distribution.
 
-- **Temperature 0.5** (the code's setting): dividing by 0.5 doubles the logits to `[4.0, 2.0, 1.0]`. Softmax produces approximately `[0.84, 0.11, 0.04, ...]`. The highest logit now dominates — the distribution is *sharper*. The model more strongly favors its best guesses.
+- **Temperature 0.5** (the code's setting): dividing by 0.5 doubles the logits to `[4.0, 2.0, 1.0]`. Softmax produces approximately `[0.84, 0.11, 0.04]`. The highest logit now dominates — the distribution is *sharper*. The model more strongly favors its best guesses.
 
-- **Temperature 0.1** (very low): the logits become `[20.0, 10.0, 5.0]`. Softmax produces nearly `[1.0, 0.0, 0.0, ...]`. The distribution is almost a hard argmax — the model always picks its most likely token. This produces the most predictable output but loses diversity.
+- **Temperature 0.1** (very low): the logits become `[20.0, 10.0, 5.0]`. Softmax produces nearly `[1.0, 0.0, 0.0]`. The distribution is almost a hard argmax — the model always picks its most likely token. This produces the most predictable output but loses diversity.
 
-- **Temperature 2.0** (high): the logits become `[1.0, 0.5, 0.25]`. Softmax produces approximately `[0.39, 0.24, 0.18, ...]`. The distribution is *flatter* — even low-probability tokens have a reasonable chance of being selected. This produces more diverse and creative output but also more errors.
+- **Temperature 2.0** (high): the logits become `[1.0, 0.5, 0.25]`. Softmax produces approximately `[0.48, 0.29, 0.23]`. The distribution is *flatter* — even low-probability tokens have a reasonable chance of being selected. This produces more diverse and creative output but also more errors.
 
 The mathematical intuition: dividing logits by `T` before softmax is equivalent to raising each probability to the power `1/T` and renormalizing. Low temperature exponentiates probabilities (sharpening), high temperature roots them (flattening).
 
@@ -98,7 +98,7 @@ keys, values = [[] for _ in range(n_layer)], [[] for _ in range(n_layer)]
 
 At the start of generation, the cache is empty. With each generated token, the cache grows by one key-value pair per layer. By the time the model is predicting the 8th character, the cache contains 8 key-value pairs, and the attention mechanism computes scores against all 8 previous positions — without reprocessing any of them through the Q, K, V projections.
 
-For microgpt's short sequences, the efficiency gain is modest. But this is the same pattern used in production LLM inference: when generating a 1,000-token response with a 96-layer model, the savings from caching are enormous.
+For microgpt's short sequences, the efficiency gain is modest. But this is the same pattern used in production large language model (LLM) inference: when generating a 1,000-token response with a 96-layer model, the savings from caching are enormous.
 
 The cache also reveals a design choice worth noting: `gpt()` *mutates* the cache by appending. This is a departure from the stateless style of the model's other components (`linear`, `softmax`, `rmsnorm` are all pure functions). The mutation is contained and intentional — it is the mechanism that allows autoregressive processing without redundant computation.
 
